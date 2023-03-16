@@ -1,7 +1,8 @@
 use std::io::{Cursor, Write};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime};
 
 use bytes::Bytes;
+use chrono::{DateTime, Utc};
 use headers::Header;
 use http::method::InvalidMethod;
 
@@ -148,14 +149,8 @@ pub(crate) fn dav_xml_error(body: &str) -> Body {
     Body::from(xml)
 }
 
-pub(crate) fn systemtime_to_offsetdatetime(t: SystemTime) -> time::OffsetDateTime {
-    match t.duration_since(UNIX_EPOCH) {
-        Ok(t) => {
-            let tm = time::OffsetDateTime::from_unix_timestamp(t.as_secs() as i64);
-            tm.to_offset(time::offset!(UTC))
-        },
-        Err(_) => time::OffsetDateTime::unix_epoch().to_offset(time::offset!(UTC)),
-    }
+pub(crate) fn systemtime_to_offsetdatetime(t: SystemTime) -> DateTime<Utc> {
+    t.into()
 }
 
 pub(crate) fn systemtime_to_httpdate(t: SystemTime) -> String {
@@ -167,7 +162,7 @@ pub(crate) fn systemtime_to_httpdate(t: SystemTime) -> String {
 
 pub(crate) fn systemtime_to_rfc3339(t: SystemTime) -> String {
     // 1996-12-19T16:39:57Z
-    systemtime_to_offsetdatetime(t).format("%FT%H:%M:%SZ")
+    systemtime_to_offsetdatetime(t).to_rfc3339()
 }
 
 // A buffer that implements "Write".

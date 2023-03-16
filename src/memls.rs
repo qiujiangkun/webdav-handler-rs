@@ -27,7 +27,7 @@ pub struct MemLs(Arc<Mutex<MemLsInner>>);
 #[derive(Debug)]
 struct MemLsInner {
     tree:  Tree,
-    locks: HashMap<Vec<u8>, u64>,
+    _locks: HashMap<Vec<u8>, u64>,
 }
 
 impl MemLs {
@@ -35,7 +35,7 @@ impl MemLs {
     pub fn new() -> Box<MemLs> {
         let inner = MemLsInner {
             tree:  Tree::new(Vec::new()),
-            locks: HashMap::new(),
+            _locks: HashMap::new(),
         };
         Box::new(MemLs(Arc::new(Mutex::new(inner))))
     }
@@ -73,14 +73,14 @@ impl DavLockSystem for MemLs {
             Some(d) => Some(SystemTime::now() + d),
         };
         let lock = DavLock {
-            token:      Uuid::new_v4().to_urn().to_string(),
+            token:      Uuid::new_v4().urn().to_string(),
             path:       path.clone(),
             principal:  principal.map(|s| s.to_string()),
             owner:      owner.cloned(),
-            timeout_at: timeout_at,
-            timeout:    timeout,
-            shared:     shared,
-            deep:       deep,
+            timeout_at,
+            timeout,
+            shared,
+            deep,
         };
         trace!("lock {} created", &lock.token);
         let slock = lock.clone();

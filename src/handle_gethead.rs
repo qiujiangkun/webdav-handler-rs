@@ -9,6 +9,8 @@ use http::{status::StatusCode, Request, Response};
 
 use bytes::Bytes;
 
+
+
 use crate::async_stream::AsyncStream;
 use crate::body::Body;
 use crate::conditional;
@@ -389,15 +391,8 @@ impl crate::DavInner {
                     let modified = match dirent.meta.modified() {
                         Ok(t) => {
                             let tm = systemtime_to_offsetdatetime(t);
-                            format!(
-                                "{:04}-{:02}-{:02} {:02}:{:02}",
-                                tm.year(),
-                                tm.month(),
-                                tm.day(),
-                                tm.hour(),
-                                tm.minute(),
-                            )
-                        },
+                            tm.format("%Y-%m-%d %H:%M").to_string()
+                        }
                         Err(_) => "".to_string(),
                     };
                     let size = match dirent.meta.is_file() {
@@ -406,7 +401,7 @@ impl crate::DavInner {
                     };
                     let name = htmlescape::encode_minimal(&dirent.name);
                     let s = format!("<tr><td><a href=\"{}\">{}</a></td><td class=\"mono\">{}</td><td class=\"mono\" align=\"right\">{}</td></tr>",
-                         dirent.path, name, modified, size);
+                                    dirent.path, name, modified, size);
                     tx.send(Bytes::from(s)).await;
                 }
 
@@ -471,6 +466,7 @@ use std::collections::HashMap;
 use std::io::{Error, ErrorKind, SeekFrom};
 use std::time::SystemTime;
 
+
 use crate::fs::{DavFile, DavMetaData, FsFuture, FsResult};
 use futures::future::{self, FutureExt};
 use handlebars::Handlebars;
@@ -504,8 +500,8 @@ async fn read_handlebars(
         Some(Authorization(basic)) => {
             vars.insert("AUTH_TYPE".to_string(), "Basic".to_string());
             vars.insert("REMOTE_USER".to_string(), basic.username().to_string());
-        },
-        _ => {},
+        }
+        _ => {}
     }
 
     // Render.
@@ -521,7 +517,7 @@ async fn read_handlebars(
 #[derive(Clone, Debug)]
 struct HbsMeta {
     mtime: SystemTime,
-    size:  u64,
+    size: u64,
 }
 
 impl DavMetaData for HbsMeta {
@@ -545,7 +541,7 @@ impl DavMetaData for HbsMeta {
 #[derive(Clone, Debug)]
 struct HbsFile {
     meta: HbsMeta,
-    pos:  usize,
+    pos: usize,
     data: Vec<u8>,
 }
 
@@ -554,10 +550,10 @@ impl HbsFile {
         Box::new(HbsFile {
             meta: HbsMeta {
                 mtime: SystemTime::now(),
-                size:  data.len() as u64,
+                size: data.len() as u64,
             },
             data: data.into_bytes(),
-            pos:  0,
+            pos: 0,
         })
     }
 }
@@ -575,7 +571,7 @@ impl DavFile for HbsFile {
             let b = Bytes::copy_from_slice(&self.data[start..end]);
             Ok(b)
         }
-        .boxed()
+            .boxed()
     }
 
     fn seek<'a>(&'a mut self, pos: SeekFrom) -> FsFuture<u64> {
@@ -595,7 +591,7 @@ impl DavFile for HbsFile {
             }
             Ok(self.pos as u64)
         }
-        .boxed()
+            .boxed()
     }
 
     fn write_buf<'a>(&'a mut self, _buf: Box<dyn bytes::Buf + Send>) -> FsFuture<()> {

@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use mime_guess;
 use percent_encoding as pct;
+use percent_encoding::AsciiSet;
 
 use crate::DavError;
 
@@ -23,25 +24,9 @@ pub struct DavPathRef {
     fullpath: [u8],
 }
 
-#[derive(Copy, Clone, Debug)]
-#[allow(non_camel_case_types)]
-struct ENCODE_SET;
 
-impl pct::EncodeSet for ENCODE_SET {
-    // Encode all non-unreserved characters, except '/'.
-    // See RFC3986, and https://en.wikipedia.org/wiki/Percent-encoding .
-    #[inline]
-    fn contains(&self, byte: u8) -> bool {
-        let unreserved = (byte >= b'A' && byte <= b'Z') ||
-            (byte >= b'a' && byte <= b'z') ||
-            (byte >= b'0' && byte <= b'9') ||
-            byte == b'-' ||
-            byte == b'_' ||
-            byte == b'.' ||
-            byte == b'~';
-        !unreserved && byte != b'/'
-    }
-}
+pub const ENCODE_SET: &AsciiSet = pct::NON_ALPHANUMERIC;
+
 
 impl std::fmt::Display for DavPath {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
